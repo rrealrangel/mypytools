@@ -6,7 +6,7 @@ Created on Tue Mar 10 14:30:22 2020
 """
 from sklearn.metrics import mean_squared_error as _mse
 from sklearn.model_selection import KFold as _KFold
-from statsmodels.nonparametric.smoothers_lowess import lowess
+from statsmodels.nonparametric.smoothers_lowess import _lowess
 import numpy as _np
 
 
@@ -33,7 +33,7 @@ def optimal_lowess(x, y, tries=10, xval_folds=3):
             y_trn = _np.concatenate([[y[0]], ymid[trn_fold], [y[-1]]])
             x_tst = xmid[tst_fold]
             y_tst = ymid[tst_fold]
-            k_model = lowess(endog=y_trn, exog=x_trn, frac=f)
+            k_model = _lowess(endog=y_trn, exog=x_trn, frac=f)
             y_trn_model = k_model[:, 1]
             y_tst_model = _np.interp(
                 x=x_tst,
@@ -47,8 +47,4 @@ def optimal_lowess(x, y, tries=10, xval_folds=3):
         crossval[f] = _np.mean(rmse)
 
     optimal_f = min(crossval.keys(), key=(lambda k: crossval[k]))
-    return(lowess(endog=y, exog=x, frac=optimal_f))
-
-
-x = labarca_aggregated.index.values ** 2
-y = labarca_aggregated['rec'].values
+    return(_lowess(endog=y, exog=x, frac=optimal_f))

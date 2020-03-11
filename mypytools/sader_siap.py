@@ -4,16 +4,16 @@ Created on Tue Mar 10 10:03:45 2020
 
 @author: rreal
 """
-from pathlib import Path
-import pandas as pd
+from pathlib import Path as _Path
+import pandas as _pd
 
 
 def read_database(path):
-    inp_list = sorted(list(Path(path).glob(pattern='**/*.csv')))
+    inp_list = sorted(list(_Path(path).glob(pattern='**/*.csv')))
     data_listed = [
-        pd.read_csv(filepath_or_buffer=i, encoding='latin') for i in inp_list
+        _pd.read_csv(filepath_or_buffer=i, encoding='latin') for i in inp_list
         ]
-    return(pd.concat(data_listed))
+    return(_pd.concat(data_listed))
 
 
 def subset(
