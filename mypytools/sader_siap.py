@@ -4,51 +4,60 @@ Created on Tue Mar 10 10:03:45 2020
 
 @author: rreal
 """
-from pathlib import Path as _Path
 import pandas as _pd
 
 
-def read_database(path):
-    inp_list = sorted(list(_Path(path).glob(pattern='**/*.csv')))
-    data_listed = [
-        _pd.read_csv(filepath_or_buffer=i, encoding='latin') for i in inp_list
-        ]
-    return(_pd.concat(data_listed))
+class SiapDatabase():
+    """
+    paths puede ser hecho con
+    inp_list = sorted(list(_Path(dir_padre).glob(pattern='**/*.extension')))
+    """
+    def __init__(self, paths):
+        self._paths = paths
+        self.DataFrame = _pd.concat([
+            _pd.read_csv(
+                filepath_or_buffer=i,
+                encoding='latin'
+                ) for i in self._paths
+            ])
 
+    def subset(
+            self, estado=None, ddr=None, cicloproductivo=None,
+            modalidad=None, cultivo=None, clean=False, onlynom=False,
+            ):
+        sub = self.DataFrame.copy()
 
-def subset(
-        data, estado=None, ddr=None, cicloproductivo=None, modalidad=None,
-        cultivo=None, clean=False, onlynom=False,
-        ):
-    sub = data.copy()
+        if estado:
+            sub = sub[(sub['Nomestado'] == estado)]
 
-    if estado:
-        sub = sub[(sub['Nomestado'] == estado)]
+        if ddr:
+            sub = sub[(sub['Nomddr'] == ddr)]
 
-    if ddr:
-        sub = sub[(sub['Nomddr'] == ddr)]
+        if cicloproductivo:
+            sub = sub[(sub['Nomcicloproductivo'] == cicloproductivo)]
 
-    if cicloproductivo:
-        sub = sub[(sub['Nomcicloproductivo'] == cicloproductivo)]
+        if modalidad:
+            sub = sub[(sub['Nommodalidad'] == modalidad)]
 
-    if modalidad:
-        sub = sub[(sub['Nommodalidad'] == modalidad)]
+        if cultivo:
+            sub = sub[(sub['Nomcultivo'] == cultivo)]
 
-    if cultivo:
-        sub = sub[(sub['Nomcultivo'] == cultivo)]
+        if clean:
+            labels = [
+                f for f in sub.columns
+                if sub[f].nunique() == 1
+                ] + ['Unnamed: 18']
+            sub.drop(
+                labels=labels,
+                axis=1,
+                inplace=True
+                )
 
-    if clean:
-        sub.drop(
-            labels=[f for f in sub.columns if sub[f].nunique() == 1],
-            axis=1,
-            inplace=True
-            )
+        if onlynom:
+            sub.drop(
+                labels=[f for f in sub.columns if f.startswith('Id')],
+                axis=1,
+                inplace=True
+                )
 
-    if onlynom:
-        sub.drop(
-            labels=[f for f in sub.columns if f.startswith('Id')],
-            axis=1,
-            inplace=True
-            )
-
-    return(sub)
+        return(sub)
