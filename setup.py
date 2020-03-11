@@ -10,31 +10,29 @@ def read(*rnames):
 
 setup(
      name='mypytools',
-     version='0.2.6.3.1',
+     version='1.0',
      author='R. A. Real-Rangel',
      author_email='rrealr@iingen.unam.mx',
      description='Conjunto de rutinas que uso a cada rato.',
      license='GPL-3.0',
      keywords="herramientas general personal",
-     url='https://bitbucket.org/pysdi/pysdi',
+     url='https://github.com/rrealrangel/mypytools',
      packages=['mypytools'],
      long_description=long_description,
      long_description_content_type='text/markdown',
      classifiers=[
-        "Development Status :: 4 - Beta",
-        "Topic :: Scientific/Engineering :: Hydrology",
+        "Development Status :: 3 - Alpha",
+        "Topic :: Scientific/Engineering",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
         ],
      install_requires=[
-         'datetime',
-         'dask',
-         'netcdf4',
          'numpy',
-         'pathlib2',
+         'pandas',
+         'pathlib',
          'scipy',
-         'toml',
-         'toolz',
-         'xarray',
+         'sklearn',
+         'statsmodels',
+         'xarray'
          ],
      zip_safe=False
      )
