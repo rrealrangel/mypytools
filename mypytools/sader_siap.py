@@ -9,16 +9,16 @@ import pandas as _pd
 
 class SiapDatabase():
     """
-    paths puede ser hecho con
+    filepaths puede ser hecho con
     inp_list = sorted(list(_Path(dir_padre).glob(pattern='**/*.extension')))
     """
-    def __init__(self, paths):
-        self._paths = paths
+    def __init__(self, filepaths):
+        self._filepaths = filepaths
         self.DataFrame = _pd.concat([
             _pd.read_csv(
                 filepath_or_buffer=i,
                 encoding='latin'
-                ) for i in self._paths
+                ) for i in self._filepaths
             ])
 
     def subset(
