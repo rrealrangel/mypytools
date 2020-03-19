@@ -7,7 +7,7 @@ Created on Tue Mar 10 10:03:45 2020
 import pandas as _pd
 
 
-class SiapDatabase():
+class SiapDataFrame():
     """
     filepaths puede ser hecho con
     inp_list = sorted(list(_Path(dir_padre).glob(pattern='**/*.extension')))
@@ -28,19 +28,39 @@ class SiapDatabase():
         sub = self.DataFrame.copy()
 
         if estado:
-            sub = sub[(sub['Nomestado'] == estado)]
+            if isinstance(estado, str):
+                sub = sub[(sub['Nomestado'] == estado)]
+
+            elif isinstance(estado, (int, float)):
+                sub = sub[(sub['Idestado'] == estado)]
 
         if ddr:
-            sub = sub[(sub['Nomddr'] == ddr)]
+            if isinstance(ddr, str):
+                sub = sub[(sub['Nomddr'] == ddr)]
+
+            elif isinstance(ddr, (int, float)):
+                sub = sub[(sub['Idddr'] == ddr)]
 
         if cicloproductivo:
-            sub = sub[(sub['Nomcicloproductivo'] == cicloproductivo)]
+            if isinstance(cicloproductivo, str):
+                sub = sub[(sub['Nomcicloproductivo'] == cicloproductivo)]
+
+            elif isinstance(cicloproductivo, (int, float)):
+                sub = sub[(sub['Idciclo'] == cicloproductivo)]
 
         if modalidad:
-            sub = sub[(sub['Nommodalidad'] == modalidad)]
+            if isinstance(modalidad, str):
+                sub = sub[(sub['Nommodalidad'] == modalidad)]
+
+            elif isinstance(modalidad, (int, float)):
+                sub = sub[(sub['Idmodalidad'] == modalidad)]
 
         if cultivo:
-            sub = sub[(sub['Nomcultivo'] == cultivo)]
+            if isinstance(cultivo, str):
+                sub = sub[(sub['Nomcultivo'] == cultivo)]
+
+            elif isinstance(cultivo, (int, float)):
+                sub = sub[(sub['Idcultivo'] == cultivo)]
 
         if clean:
             labels = [
