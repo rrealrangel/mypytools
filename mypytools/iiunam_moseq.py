@@ -8,7 +8,7 @@ import pandas as _pd
 
 
 class SDISeries():
-    def __init__(self, filepath):
+    def __init__(self, filepath, percentile):
         self._filepath = filepath
         self.Series = _pd.read_csv(
             filepath_or_buffer=self._filepath,
@@ -19,7 +19,7 @@ class SDISeries():
                 arg=x,
                 format='%Y%m'
                 ) + _pd.tseries.offsets.MonthEnd(1)
-            )
+            )[percentile]
 
     def get_monthly_ts(self, month):
         return(self.Series[self.Series.index.month == month])
