@@ -11,6 +11,8 @@ import numpy as _np
 
 
 def optimal_lowess(x, y, fracs=11, xval_folds=3, random_seeds=range(3)):
+    """
+    """
     xmid = x[1:-1]
     ymid = y[1:-1]
     f_tries = _np.linspace(
@@ -54,3 +56,24 @@ def optimal_lowess(x, y, fracs=11, xval_folds=3, random_seeds=range(3)):
 
     optimal_f = _np.mean(best_seed_f)
     return(_lowess(endog=y, exog=x, frac=optimal_f))
+
+
+def power_law(x, alpha, beta):
+    """
+    """
+    return alpha * (x**beta)
+
+
+def logistic(x, k, x0):
+    """
+    Logistic function
+
+    Source: wikipedia.org (https://bit.ly/2Wuxn34).
+
+    Parameters:
+        k : float
+            Logistic growth rate or steepness of the curve.
+        x0 : float
+            x-value of the sigmoid's midpoint.
+    """
+    return(1 / (1 + np.exp(-k * (x - x0))))
