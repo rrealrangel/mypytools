@@ -27,7 +27,7 @@ class IiSdi():
         return(self.Series[self.Series.index.month == month])
 
 
-class SiapAgProd():
+class SiapAgCierres():
     """
     filepaths puede ser hecho con
     inp_list = sorted(list(_Path(dir_padre).glob(pattern='**/*.extension')))

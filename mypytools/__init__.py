@@ -1,4 +1,5 @@
 from . import confmatrix
-from . import lowess
-from . import sader_siap
-from . import iiunam_moseq
+from . import data_manage
+from . import data_modelling
+# from . import sdi
+from . import tseries
