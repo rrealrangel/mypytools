@@ -245,9 +245,11 @@ def avances_fillna(data):
 
 
 def avances_monthly_weight(data):
-    mean_advance = data.groupby(by='ANO').apply(
+    data.index = _pd.DatetimeIndex(data.index)
+    data[data.isna()] = 0
+    mean_progress = data.groupby(by='ANO').apply(
         lambda table: table / table.iloc[-1]
         ).groupby(by=data.index.month).mean()
-    mean_advance.clip(lower=0, upper=1, inplace=True)
-    exposure = mean_advance['SEMBRADO_HA'] - mean_advance['COSECHADO_HA']
+    mean_progress.clip(lower=0, upper=1, inplace=True)
+    exposure = mean_progress['SEMBRADO_HA'] - mean_progress['COSECHADO_HA']
     return(exposure / exposure.sum())
