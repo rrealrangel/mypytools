@@ -5,12 +5,14 @@ this_directory = path.abspath(path.dirname(__file__))
 with open(path.join(this_directory, 'README.md')) as f:
     long_description = f.read()
 
+
 def read(*rnames):
-    return open(os.path.join(os.path.dirname(__file__), *rnames)).read()
+    return open(path.join(path.dirname(__file__), *rnames)).read()
+
 
 setup(
      name='mypytools',
-     version='1.0',
+     version='1.dev4',
      author='R. A. Real-Rangel',
      author_email='rrealr@iingen.unam.mx',
      description='Conjunto de rutinas que uso a cada rato.',
