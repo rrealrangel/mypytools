@@ -11,6 +11,13 @@ Rural (SADER) de México.
 """
 import datetime as _dt
 import pandas as _pd
+import unicodedata as _unicodedata
+
+
+def _remove_accents(input_str):
+    """Source: https://stackoverflow.com/a/517974"""
+    nfkd_form = _unicodedata.normalize('NFKD', input_str)
+    return u"".join([c for c in nfkd_form if not _unicodedata.combining(c)])
 
 
 # =============================================================================
@@ -51,36 +58,50 @@ def cierres_subset(
 
     if estado:
         if isinstance(estado, str):
-            sub = sub[sub['Nomestado'].str.lower() == estado.lower()]
+            sub = sub[
+                sub['Nomestado'].str.lower().apply(_remove_accents) ==
+                _remove_accents(estado.lower())
+                ]
 
         elif isinstance(estado, (int, float)):
             sub = sub[sub['Idestado'] == estado]
 
     if ddr:
         if isinstance(ddr, str):
-            sub = sub[sub['Nomddr'].str.lower() == ddr.lower()]
+            sub = sub[
+                sub['Nomddr'].str.lower().apply(_remove_accents) ==
+                _remove_accents(ddr.lower())
+                ]
 
         elif isinstance(ddr, (int, float)):
             sub = sub[sub['Idddr'] == ddr]
 
     if cicloproductivo:
         if isinstance(cicloproductivo, str):
-            sub = sub[sub['Nomcicloproductivo'].str.lower() ==
-                      cicloproductivo.lower()]
+            sub = sub[
+                sub['Nomcicloproductivo'].str.lower().apply(_remove_accents) ==
+                _remove_accents(cicloproductivo.lower())
+                ]
 
         elif isinstance(cicloproductivo, (int, float)):
             sub = sub[sub['Idciclo'] == cicloproductivo]
 
     if modalidad:
         if isinstance(modalidad, str):
-            sub = sub[sub['Nommodalidad'].str.lower() == modalidad.lower()]
+            sub = sub[
+                sub['Nommodalidad'].str.lower().apply(_remove_accents) ==
+                _remove_accents(modalidad.lower())
+                ]
 
         elif isinstance(modalidad, (int, float)):
             sub = sub[sub['Idmodalidad'] == modalidad]
 
     if cultivo:
         if isinstance(cultivo, str):
-            sub = sub[sub['Nomcultivo'].str.lower() == cultivo.lower()]
+            sub = sub[
+                sub['Nomcultivo'].str.lower().apply(_remove_accents) ==
+                _remove_accents(cultivo.lower())
+                ]
 
         elif isinstance(cultivo, (int, float)):
             sub = sub[sub['Idcultivo'] == cultivo]
@@ -194,19 +215,34 @@ def avances_subset(
     sub = data.copy()
 
     if estado:
-        sub = sub[sub['ESTADO'].str.lower() == estado.lower()]
+        sub = sub[
+            sub['ESTADO'].str.lower().apply(_remove_accents) ==
+            _remove_accents(estado.lower())
+            ]
 
     if ddr:
-        sub = sub[sub['DISTRITO'].str.lower() == ddr.lower()]
+        sub = sub[
+            sub['DISTRITO'].str.lower().apply(_remove_accents) ==
+            _remove_accents(ddr.lower())
+            ]
 
     if cicloproductivo:
-        sub = sub[sub['CICLO'].str.lower() == cicloproductivo.lower()]
+        sub = sub[
+            sub['CICLO'].str.lower().apply(_remove_accents) ==
+            _remove_accents(cicloproductivo.lower())
+            ]
 
     if modalidad:
-        sub = sub[sub['MOD'].str.lower() == modalidad.lower()]
+        sub = sub[
+            sub['MOD'].str.lower().apply(_remove_accents) ==
+            _remove_accents(modalidad.lower())
+            ]
 
     if cultivo:
-        sub = sub[sub['CULTIVO'].str.lower() == cultivo.lower()]
+        sub = sub[
+            sub['CULTIVO'].str.lower().apply(_remove_accents) ==
+            _remove_accents(cultivo.lower())
+            ]
 
     if clean:
         sub.drop(
