@@ -167,7 +167,13 @@ def avances_open_dataset(filename):
             'ESTADO DISTRITO SEMBRADO_HA COSECHADO_HA SINIESTRADO_HA '
             'OBTENIDO_TON RBC_TON/HA'.split()
             )
-        table['ESTADO'] = table['ESTADO'].fillna(method='ffill')
+        table = table.reindex(columns=(
+            'ANO CORTE CULTIVO CICLO MOD ESTADO DISTRITO SEMBRADO_HA '
+            'COSECHADO_HA SINIESTRADO_HA OBTENIDO_TON'.split()))
+        table.loc[:, 'DISTRITO'] = (
+            table.loc[:, 'DISTRITO'].str.upper().apply(_remove_accents)
+            )
+        table.loc[:, 'ESTADO'].fillna(method='ffill', inplace=True)
 
         # Parse the metadata.
         titles = [
@@ -181,25 +187,18 @@ def avances_open_dataset(filename):
                 ]
             if i
             ]
-        table['CICLO'] = metadata[0]
-        table['ANO'] = int(metadata[1])
-        table['MOD'] = metadata[2]
-        table['CORTE'] = str2DatetimeIndex(date_str=metadata[3])
-        table['CULTIVO'] = metadata[5]
-        output.append(
-            table.loc[
-                :,
-                'ANO CORTE ESTADO DISTRITO CULTIVO CICLO MOD SEMBRADO_HA '
-                'COSECHADO_HA SINIESTRADO_HA OBTENIDO_TON'.split()
-                ]
-            )
+        table.loc[:, 'CICLO'] = _remove_accents(metadata[0].upper())
+        table.loc[:, 'ANO'] = int(metadata[1])
+        table.loc[:, 'MOD'] = _remove_accents(metadata[2].upper())
+        table.loc[:, 'CORTE'] = str2DatetimeIndex(date_str=metadata[3])
+        table.loc[:, 'CULTIVO'] = _remove_accents(metadata[5].upper())
+        output.append(table)
 
     output = _pd.concat(output)
     output.set_index(
-        keys='CORTE',
+        keys=['ANO', 'CORTE', 'CULTIVO', 'CICLO', 'MOD', 'ESTADO', 'DISTRITO'],
         inplace=True
         )
-
     return(output)
 
 
@@ -211,47 +210,20 @@ def avances_open_mfdataset(paths):
 
 def avances_subset(
         data, estado=None, ddr=None, cicloproductivo=None, modalidad=None,
-        cultivo=None, clean=False):
-    sub = data.copy()
-
-    if estado:
-        sub = sub[
-            sub['ESTADO'].str.lower().apply(_remove_accents) ==
-            _remove_accents(estado.lower())
-            ]
-
-    if ddr:
-        sub = sub[
-            sub['DISTRITO'].str.lower().apply(_remove_accents) ==
-            _remove_accents(ddr.lower())
-            ]
-
-    if cicloproductivo:
-        sub = sub[
-            sub['CICLO'].str.lower().apply(_remove_accents) ==
-            _remove_accents(cicloproductivo.lower())
-            ]
-
-    if modalidad:
-        sub = sub[
-            sub['MOD'].str.lower().apply(_remove_accents) ==
-            _remove_accents(modalidad.lower())
-            ]
-
-    if cultivo:
-        sub = sub[
-            sub['CULTIVO'].str.lower().apply(_remove_accents) ==
-            _remove_accents(cultivo.lower())
-            ]
-
-    if clean:
-        sub.drop(
-            labels=sub.columns[(sub.nunique() == 1).values],
-            axis=1,
-            inplace=True
-            )
-
-    return(sub)
+        cultivo=None):
+    par = {
+        'ESTADO': estado,
+        'DISTRITO': ddr,
+        'CICLO': cicloproductivo,
+        'MOD': modalidad,
+        'CULTIVO': cultivo
+        }
+    par = {
+        key: _remove_accents(level.upper())
+        for key, level in par.items()
+        if level
+        }
+    return(data.xs(key=par.values(), level=list(par.keys())))
 
 
 def avances_fillna(data):
