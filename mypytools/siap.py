@@ -119,73 +119,19 @@ def cierres_subset(
         data, estado=None, ddr=None, cicloproductivo=None, modalidad=None,
         cultivo=None, clean=False, onlynom=False,
         ):
-    sub = data.copy()
-
-    if estado:
-        if isinstance(estado, str):
-            sub = sub[
-                sub['NOMESTADO'].str.lower().apply(_remove_accents) ==
-                _remove_accents(estado.lower())
-                ]
-
-        elif isinstance(estado, (int, float)):
-            sub = sub[sub['IDESTADO'] == estado]
-
-    if ddr:
-        if isinstance(ddr, str):
-            sub = sub[
-                sub['NOMDDR'].str.lower().apply(_remove_accents) ==
-                _remove_accents(ddr.lower())
-                ]
-
-        elif isinstance(ddr, (int, float)):
-            sub = sub[sub['IDDDR'] == ddr]
-
-    if cicloproductivo:
-        if isinstance(cicloproductivo, str):
-            sub = sub[
-                sub['NOMCICLOPRODUCTIVO'].str.lower().apply(_remove_accents) ==
-                _remove_accents(cicloproductivo.lower())
-                ]
-
-        elif isinstance(cicloproductivo, (int, float)):
-            sub = sub[sub['IDCICLO'] == cicloproductivo]
-
-    if modalidad:
-        if isinstance(modalidad, str):
-            sub = sub[
-                sub['NOMMODALIDAD'].str.lower().apply(_remove_accents) ==
-                _remove_accents(modalidad.lower())
-                ]
-
-        elif isinstance(modalidad, (int, float)):
-            sub = sub[sub['IDMODALIDAD'] == modalidad]
-
-    if cultivo:
-        if isinstance(cultivo, str):
-            sub = sub[
-                sub['NOMCULTIVO'].str.lower().apply(_remove_accents) ==
-                _remove_accents(cultivo.lower())
-                ]
-
-        elif isinstance(cultivo, (int, float)):
-            sub = sub[sub['IDCULTIVO'] == cultivo]
-
-    if clean:
-        sub.drop(
-            labels=sub.columns[(sub.nunique() == 1).values],
-            axis=1,
-            inplace=True
-            )
-
-    if onlynom:
-        sub.drop(
-            labels=[f for f in sub.columns if f.startswith('Id')],
-            axis=1,
-            inplace=True
-            )
-
-    return(sub)
+    par = {
+        'NOMESTADO': estado,
+        'NOMDDR': ddr,
+        'NOMCICLOPRODUCTIVO': cicloproductivo,
+        'NOMMODALIDAD': modalidad,
+        'NOMCULTIVO': cultivo
+        }
+    par = {
+        key: _remove_accents(level.upper())
+        for key, level in par.items()
+        if level
+        }
+    return(data.xs(key=par.values(), level=list(par.keys())))
 
 
 # =============================================================================
