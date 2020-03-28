@@ -15,7 +15,7 @@ import unicodedata as _unicodedata
 
 
 def _remove_accents(input_str):
-    """Source: https://stackoverflow.com/a/517974"""
+    """Source: https://stackoverflow.com/a/517974."""
     nfkd_form = _unicodedata.normalize('NFKD', input_str)
     return u"".join([c for c in nfkd_form if not _unicodedata.combining(c)])
 
@@ -23,7 +23,7 @@ def _remove_accents(input_str):
 # =============================================================================
 # Cierres de ciclo
 # =============================================================================
-def cierres_open_dataset(filename):
+def cierres_open_dataset(filename, level=4):
     """Abre un archivo de cierres agrícolas del SIAP.
 
     Parameters
@@ -36,18 +36,83 @@ def cierres_open_dataset(filename):
     pandas.DataFrame.
 
     """
-    return(_pd.read_csv(
+    df = _pd.read_csv(
         filepath_or_buffer=filename,
         encoding='latin',
         low_memory=False
-        ))
+        )
+    df.drop(
+        columns=[i for i in df.columns if i.startswith('Id')],
+        inplace=True
+        )
+    df.dropna(
+        axis=0,
+        how='all',
+        inplace=True
+        )
+    df.columns = df.columns.str.upper()
+
+    for col in [i for i in df.columns.tolist() if i.startswith('NOM')]:
+        df.loc[:, col] = df.loc[:, col].apply(_remove_accents).str.upper()
+
+    df.loc[df['NOMESTADO'] == 'CIUDAD DE MEXICO / DF', 'NOMESTADO'] = (
+        'CIUDAD DE MEXICO'
+        )
+
+    df.set_index(
+        keys=(
+            ['ANIO'] + [i for i in df.columns.tolist() if i.startswith('NOM')]
+            ),
+        inplace=True
+        )
+    df.dropna(
+        axis=1,
+        how='all',
+        inplace=True
+        )
+
+    if level == 1:  # País
+        df = df.groupby(level=[
+            'ANIO', 'NOMCICLOPRODUCTIVO', 'NOMMODALIDAD', 'NOMUNIDAD',
+            'NOMCULTIVO'
+            ]).sum()
+
+    elif level == 2:  # Estado
+        df = df.groupby(level=[
+            'ANIO', 'NOMESTADO', 'NOMCICLOPRODUCTIVO', 'NOMMODALIDAD',
+            'NOMUNIDAD', 'NOMCULTIVO'
+            ]).sum()
+
+    elif level == 3:  # Distrito de desarrollo rural
+        try:
+            df = df.groupby(level=[
+                'ANIO', 'NOMESTADO', 'NOMDDR', 'NOMCICLOPRODUCTIVO',
+                'NOMMODALIDAD', 'NOMUNIDAD', 'NOMCULTIVO'
+                ]).sum()
+
+        except AssertionError:
+            pass
+
+    elif level == 4:  # Municipio
+        pass
+
+    return(df)
 
 
-def cierres_open_mfdataset(paths):
-    return(_pd.concat([
-        cierres_open_dataset(filename)
-        for filename in paths
-        ]))
+def cierres_open_mfdataset(paths, level=4):
+    dfs = [cierres_open_dataset(filename, level) for filename in paths]
+    # levels = set([j for j in list(i.index.names) for i in dfs])
+    df = _pd.concat(
+        objs=[i.reset_index() for i in dfs],
+        ignore_index=True
+        )
+    df.set_index(
+        keys=(
+            ['ANIO'] + [i for i in df.columns.tolist() if i.startswith('NOM')]
+            ),
+        inplace=True
+        )
+    return(df)
 
 
 def cierres_subset(
@@ -59,52 +124,52 @@ def cierres_subset(
     if estado:
         if isinstance(estado, str):
             sub = sub[
-                sub['Nomestado'].str.lower().apply(_remove_accents) ==
+                sub['NOMESTADO'].str.lower().apply(_remove_accents) ==
                 _remove_accents(estado.lower())
                 ]
 
         elif isinstance(estado, (int, float)):
-            sub = sub[sub['Idestado'] == estado]
+            sub = sub[sub['IDESTADO'] == estado]
 
     if ddr:
         if isinstance(ddr, str):
             sub = sub[
-                sub['Nomddr'].str.lower().apply(_remove_accents) ==
+                sub['NOMDDR'].str.lower().apply(_remove_accents) ==
                 _remove_accents(ddr.lower())
                 ]
 
         elif isinstance(ddr, (int, float)):
-            sub = sub[sub['Idddr'] == ddr]
+            sub = sub[sub['IDDDR'] == ddr]
 
     if cicloproductivo:
         if isinstance(cicloproductivo, str):
             sub = sub[
-                sub['Nomcicloproductivo'].str.lower().apply(_remove_accents) ==
+                sub['NOMCICLOPRODUCTIVO'].str.lower().apply(_remove_accents) ==
                 _remove_accents(cicloproductivo.lower())
                 ]
 
         elif isinstance(cicloproductivo, (int, float)):
-            sub = sub[sub['Idciclo'] == cicloproductivo]
+            sub = sub[sub['IDCICLO'] == cicloproductivo]
 
     if modalidad:
         if isinstance(modalidad, str):
             sub = sub[
-                sub['Nommodalidad'].str.lower().apply(_remove_accents) ==
+                sub['NOMMODALIDAD'].str.lower().apply(_remove_accents) ==
                 _remove_accents(modalidad.lower())
                 ]
 
         elif isinstance(modalidad, (int, float)):
-            sub = sub[sub['Idmodalidad'] == modalidad]
+            sub = sub[sub['IDMODALIDAD'] == modalidad]
 
     if cultivo:
         if isinstance(cultivo, str):
             sub = sub[
-                sub['Nomcultivo'].str.lower().apply(_remove_accents) ==
+                sub['NOMCULTIVO'].str.lower().apply(_remove_accents) ==
                 _remove_accents(cultivo.lower())
                 ]
 
         elif isinstance(cultivo, (int, float)):
-            sub = sub[sub['Idcultivo'] == cultivo]
+            sub = sub[sub['IDCULTIVO'] == cultivo]
 
     if clean:
         sub.drop(
