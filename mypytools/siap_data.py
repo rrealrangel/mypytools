@@ -72,31 +72,32 @@ def cierres_open_dataset(filename, level=4):
         )
 
     if level == 1:  # País
-        df = df.groupby(level=[
+        levels = [
             'ANIO', 'NOMCICLOPRODUCTIVO', 'NOMMODALIDAD', 'NOMUNIDAD',
             'NOMCULTIVO'
-            ]).sum()
+            ]
 
     elif level == 2:  # Estado
-        df = df.groupby(level=[
+        levels = [
             'ANIO', 'NOMESTADO', 'NOMCICLOPRODUCTIVO', 'NOMMODALIDAD',
             'NOMUNIDAD', 'NOMCULTIVO'
-            ]).sum()
+            ]
 
     elif level == 3:  # Distrito de desarrollo rural
-        try:
-            df = df.groupby(level=[
-                'ANIO', 'NOMESTADO', 'NOMDDR', 'NOMCICLOPRODUCTIVO',
-                'NOMMODALIDAD', 'NOMUNIDAD', 'NOMCULTIVO'
-                ]).sum()
-
-        except AssertionError:
-            pass
+        levels = [
+            'ANIO', 'NOMESTADO', 'NOMDDR', 'NOMCICLOPRODUCTIVO',
+            'NOMMODALIDAD', 'NOMUNIDAD', 'NOMCULTIVO'
+            ]
 
     elif level == 4:  # Municipio
+        print("ALERTA: El nivel {} no está disponible.".format(level))
         pass
 
-    return(df)
+    try:
+        return(df.groupby(level=levels).sum())
+
+    except AssertionError:
+        pass
 
 
 def cierres_open_mfdataset(paths, level=4):
@@ -137,7 +138,7 @@ def cierres_subset(
 # =============================================================================
 # Avances mensuales (2006-presente)
 # =============================================================================
-def avances_open_dataset(filename):
+def avances_open_dataset(filename, level=4):
     def str2DatetimeIndex(date_str):
         keys = (
             'ENERO FEBRERO MARZO ABRIL MAYO JUNIO JULIO AGOSTO SEPTIEMBRE '
@@ -205,17 +206,37 @@ def avances_open_dataset(filename):
         table.loc[:, 'CULTIVO'] = _remove_accents(metadata[5].upper())
         output.append(table)
 
-    output = _pd.concat(output)
-    output.set_index(
+    df = _pd.concat(output)
+    df.set_index(
         keys=['ANO', 'CORTE', 'CULTIVO', 'CICLO', 'MOD', 'ESTADO', 'DISTRITO'],
         inplace=True
         )
-    return(output)
+
+    if level == 1:  # País
+        levels = ['ANO', 'CORTE', 'CULTIVO', 'CICLO', 'MOD']
+
+    elif level == 2:  # Estado
+        levels = ['ANO', 'CORTE', 'CULTIVO', 'CICLO', 'MOD', 'ESTADO']
+
+    elif level == 3:  # Distrito de desarrollo rural
+        levels = [
+            'ANO', 'CORTE', 'CULTIVO', 'CICLO', 'MOD', 'ESTADO', 'DISTRITO'
+            ]
+
+    elif level == 4:  # Municipio
+        print("ALERTA: El nivel {} no está disponible.".format(level))
+        pass
+
+    try:
+        return(df.groupby(level=levels).sum())
+
+    except AssertionError:
+        pass
 
 
-def avances_open_mfdataset(paths):
+def avances_open_mfdataset(paths, level=4):
     return(_pd.concat([
-        avances_open_dataset(filename) for filename in paths
+        avances_open_dataset(filename, level) for filename in paths
         ]))
 
 
@@ -270,3 +291,48 @@ def avances_monthly_weight(data):
     mean_progress.clip(lower=0, upper=1, inplace=True)
     exposure = mean_progress['SEMBRADO_HA'] - mean_progress['COSECHADO_HA']
     return(exposure / exposure.sum())
+
+
+def avances_temporada(data, ciclo, umbral=0.05):
+    """
+    Determina el inicio y final de temporada de un registro de cultivo.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Registros mensuales de superficie sembrada, cosechada y siniestrada.
+    ciclo : str
+        Identificador para el ciclo productivo. Los valores aceptados
+        son: 'PV' (Primavera-Verano) y 'OI' (Otoño-Invierno).
+    umbral : float, optional
+        Porcentaje de área cultivada a partir del que se considera que
+        se existe cultivo en suelo. El valor predeterminado es 0.05.
+
+    Returns
+    -------
+    sos : int
+        Mes en que inicia la temporada del cultivo.
+    eos : int
+        Mes en que finaliza la temporada del cultivo.
+
+    """
+    mean_progress = data.groupby(level='ANO').apply(
+        lambda table: table / table.iloc[-1]
+        ).groupby(by=data.index.get_level_values('CORTE').month).mean()
+    mean_progress.clip(lower=0, upper=1, inplace=True)
+    exposure = mean_progress['SEMBRADO_HA'] - mean_progress['COSECHADO_HA']
+
+    if ciclo == 'PV':  # Primavera-Verano (abril-marzo)
+        new_index = list(range(4, 13)) + list(range(1, 4))
+
+    elif ciclo == 'OI':  # Otoño-Invierno (octubre-septiembre)
+        new_index = list(range(10, 13)) + list(range(1, 10))
+
+    exposure = exposure.reindex(index=new_index)
+    sos = exposure[exposure >= umbral].index.tolist()[0]  # Inicio
+    eos = exposure[exposure >= umbral].index.tolist()[-1] + 1  # Final
+
+    if eos > 12:
+        eos -= 12
+
+    return (sos, eos)
