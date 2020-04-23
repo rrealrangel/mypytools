@@ -293,7 +293,7 @@ def avances_monthly_weight(data):
     return(exposure / exposure.sum())
 
 
-def avances_temporada(data, ciclo, umbral=0.05):
+def avances_temporada(data, umbral=0.05):
     """
     Determina el inicio y final de temporada de un registro de cultivo.
 
@@ -321,16 +321,15 @@ def avances_temporada(data, ciclo, umbral=0.05):
         ).groupby(by=data.index.get_level_values('CORTE').month).mean()
     mean_progress.clip(lower=0, upper=1, inplace=True)
     exposure = mean_progress['SEMBRADO_HA'] - mean_progress['COSECHADO_HA']
+    exposed = exposure >= 0.05
 
-    if ciclo == 'PV':  # Primavera-Verano (abril-marzo)
-        new_index = list(range(4, 13)) + list(range(1, 4))
+    while np.diff(exposed[exposed].index).max() > 1:
+        new_index = (exposed.index + 1).to_numpy()
+        new_index[new_index > 12] = new_index[new_index > 12] - 12
+        exposed = exposed.reindex(index=new_index)
 
-    elif ciclo == 'OI':  # Otoño-Invierno (octubre-septiembre)
-        new_index = list(range(10, 13)) + list(range(1, 10))
-
-    exposure = exposure.reindex(index=new_index)
-    sos = exposure[exposure >= umbral].index.tolist()[0]  # Inicio
-    eos = exposure[exposure >= umbral].index.tolist()[-1] + 1  # Final
+    sos = exposed[exposed >= umbral].index.tolist()[0]  # Inicio
+    eos = exposed[exposed >= umbral].index.tolist()[-1] + 1  # Final
 
     if eos > 12:
         eos -= 12
