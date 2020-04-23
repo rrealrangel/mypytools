@@ -10,6 +10,7 @@ https://www.gob.mx/siap) de la Secretaría de Agricultura y Desarrollo
 Rural (SADER) de México.
 """
 import datetime as _dt
+import numpy as _np
 import pandas as _pd
 import unicodedata as _unicodedata
 
@@ -323,7 +324,7 @@ def avances_temporada(data, umbral=0.05):
     exposure = mean_progress['SEMBRADO_HA'] - mean_progress['COSECHADO_HA']
     exposed = exposure >= 0.05
 
-    while np.diff(exposed[exposed].index).max() > 1:
+    while _np.diff(exposed[exposed].index).max() > 1:
         new_index = (exposed.index + 1).to_numpy()
         new_index[new_index > 12] = new_index[new_index > 12] - 12
         exposed = exposed.reindex(index=new_index)
