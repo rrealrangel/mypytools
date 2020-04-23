@@ -12,7 +12,7 @@ def read(*rnames):
 
 setup(
      name='mypytools',
-     version='1a.15.1',
+     version='1a.15.2',
      author='R. A. Real-Rangel',
      author_email='rrealr@iingen.unam.mx',
      description='Conjunto de rutinas que uso a cada rato.',
